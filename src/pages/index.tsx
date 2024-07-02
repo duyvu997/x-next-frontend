@@ -1,118 +1,253 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
+import { gql, useMutation, useQuery } from '@apollo/client';
 
-const inter = Inter({ subsets: ['latin'] })
+import Head from 'next/head';
+import { useState } from 'react';
 
-export default function Home() {
+// GraphQL Query to fetch employees
+const QUERY = gql`
+  query Employees($page: Int, $pageSize: Int) {
+    employees(page: $page, pageSize: $pageSize) {
+      id
+      name
+      email
+    }
+  }
+`;
+
+// GraphQL Mutation to create an employee
+const CREATE_EMPLOYEE = gql`
+  mutation CreateEmployee($name: String!, $email: String!) {
+    createEmployee(name: $name, email: $email) {
+      code
+      success
+      message
+      employee {
+        id
+        name
+        email
+      }
+    }
+  }
+`;
+
+// GraphQL Mutation to delete an employee
+const DELETE_EMPLOYEE = gql`
+  mutation DeleteEmployee($deleteEmployeeId: ID!) {
+    deleteEmployee(id: $deleteEmployeeId) {
+      code
+      success
+      message
+      employee {
+        id
+        name
+        email
+      }
+    }
+  }
+`;
+
+// GraphQL Mutation to update an employee
+const UPDATE_EMPLOYEE = gql`
+  mutation UpdateEmployee(
+    $updateEmployeeId: ID!
+    $name: String
+    $email: String
+  ) {
+    updateEmployee(id: $updateEmployeeId, name: $name, email: $email) {
+      code
+      success
+      message
+      employee {
+        id
+        name
+        email
+      }
+    }
+  }
+`;
+
+const Home: React.FC = () => {
+  const { data, loading, error, refetch } = useQuery(QUERY, {
+    variables: {
+      page: 1,
+      pageSize: 10,
+    },
+  });
+
+  const [createEmployee] = useMutation(CREATE_EMPLOYEE);
+  const [deleteEmployee] = useMutation(DELETE_EMPLOYEE);
+  const [updateEmployee] = useMutation(UPDATE_EMPLOYEE);
+
+  const [newEmployeeName, setNewEmployeeName] = useState('');
+  const [newEmployeeEmail, setNewEmployeeEmail] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [editEmployeeId, setEditEmployeeId] = useState('');
+  const [editEmployeeName, setEditEmployeeName] = useState('');
+  const [editEmployeeEmail, setEditEmployeeEmail] = useState('');
+
+  const handleCreateEmployee = async () => {
+    try {
+      setIsCreating(true);
+      await createEmployee({
+        variables: {
+          name: newEmployeeName,
+          email: newEmployeeEmail,
+        },
+      });
+      refetch();
+      setNewEmployeeName('');
+      setNewEmployeeEmail('');
+    } catch (error) {
+      console.error('Error creating employee:', error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleDeleteEmployee = async (id: string) => {
+    try {
+      await deleteEmployee({
+        variables: {
+          deleteEmployeeId: id,
+        },
+      });
+      refetch();
+    } catch (error) {
+      console.error('Error deleting employee:', error);
+    }
+  };
+
+  const handleUpdateEmployee = async () => {
+    try {
+      await updateEmployee({
+        variables: {
+          updateEmployeeId: editEmployeeId,
+          name: editEmployeeName,
+          email: editEmployeeEmail,
+        },
+      });
+      refetch();
+      // Clear edit state after update
+      setEditEmployeeId('');
+      setEditEmployeeName('');
+      setEditEmployeeEmail('');
+    } catch (error) {
+      console.error('Error updating employee:', error);
+    }
+  };
+
+  if (loading) return <p>Loading...</p>;
+  if (error) {
+    console.error('GraphQL error:', error);
+    return <p>Error fetching data.</p>;
+  }
+
   return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
-    >
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/pages/index.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700/10 after:dark:from-sky-900 after:dark:via-[#0141ff]/40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+    <>
+      <Head>
+        <title>Next.js and GraphQL Setup</title>
+        <meta
+          name='description'
+          content='Generated by create next app'
         />
-      </div>
+        <meta
+          name='viewport'
+          content='width=device-width, initial-scale=1'
+        />
+        <link
+          rel='icon'
+          href='/favicon.ico'
+        />
+      </Head>
+      <main className='p-4'>
+        <h1 className='text-2xl font-bold mb-4'>Employees</h1>
+        <ul className='space-y-40 mx-auto w-1/3'>
+          {(data?.employees || []).map(
+            (employee: { id: string; name: string; email: string }) => (
+              <li
+                key={employee.id}
+                className='border rounded-lg p-4 bg-gray-100'>
+                {/* Edit form or modal */}
+                {editEmployeeId === employee.id ? (
+                  <div className='mb-2'>
+                    <input
+                      type='text'
+                      placeholder='Name'
+                      value={editEmployeeName}
+                      onChange={(e) => setEditEmployeeName(e.target.value)}
+                      className='border rounded-md px-3 py-2 w-1/2'
+                    />
+                    <input
+                      type='email'
+                      placeholder='Email'
+                      value={editEmployeeEmail}
+                      onChange={(e) => setEditEmployeeEmail(e.target.value)}
+                      className='border rounded-md px-3 py-2 w-1/2'
+                    />
+                    <button
+                      onClick={handleUpdateEmployee}
+                      className='bg-green-500 text-white px-4 py-2 rounded-md ml-2 mt-6'>
+                      Update
+                    </button>
+                  </div>
+                ) : (
+                  <div className='text-left text-2xl mb-6'>
+                    <strong>Id:</strong> {employee.id} <br />
+                    <strong>Name:</strong> {employee.name} <br />
+                    <strong>Email:</strong> {employee.email}
+                  </div>
+                )}
+                {/* Actions */}
+                <div className='mt-2 flex justify-center'>
+                  <button
+                    className='bg-blue-500 text-white px-4 py-2 rounded-md mr-2'
+                    onClick={() => {
+                      setEditEmployeeId(employee.id);
+                      setEditEmployeeName(employee.name);
+                      setEditEmployeeEmail(employee.email);
+                    }}>
+                    Edit
+                  </button>
+                  <button
+                    className='bg-red-500 text-white px-4 py-2 rounded-md'
+                    onClick={() => handleDeleteEmployee(employee.id)}>
+                    Delete
+                  </button>
+                </div>
+              </li>
+            )
+          )}
+        </ul>
+        <div className='mt-8'>
+          <h2 className='text-xl font-bold mb-4'>Add New Employee</h2>
+          <div className='flex space-x-2 h-10'>
+            <input
+              type='text'
+              placeholder='Name'
+              value={newEmployeeName}
+              onChange={(e) => setNewEmployeeName(e.target.value)}
+              className='border rounded-md px-3 py-2 w-2/5'
+            />
+            <input
+              type='email'
+              placeholder='Email'
+              value={newEmployeeEmail}
+              onChange={(e) => setNewEmployeeEmail(e.target.value)}
+              className='border rounded-md px-3 py-2 w-2/5'
+            />
+            <button
+              onClick={handleCreateEmployee}
+              className={`bg-green-500 text-white px-4 py-2 rounded-md ${
+                isCreating ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              disabled={isCreating}>
+              {isCreating ? 'Adding...' : 'Add'}
+            </button>
+          </div>
+        </div>
+      </main>
+    </>
+  );
+};
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Discover and deploy boilerplate example Next.js&nbsp;projects.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
-}
+export default Home;
