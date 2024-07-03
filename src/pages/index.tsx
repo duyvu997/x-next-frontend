@@ -1,85 +1,29 @@
+import { faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { gql, useMutation, useQuery } from '@apollo/client';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Head from 'next/head';
+import employeeMutations from '../lib/mutations/employee';
+import employeeQueries from '../lib/queries/employee';
 import { useState } from 'react';
 import { useToasts } from 'react-toast-notifications';
 
-// GraphQL Query to fetch employees
-const QUERY = gql`
-  query Employees($page: Int, $pageSize: Int) {
-    employees(page: $page, pageSize: $pageSize) {
-      id
-      name
-      email
-    }
-  }
-`;
-
-// GraphQL Mutation to create an employee
-const CREATE_EMPLOYEE = gql`
-  mutation CreateEmployee($name: String!, $email: String!) {
-    createEmployee(name: $name, email: $email) {
-      code
-      success
-      message
-      employee {
-        id
-        name
-        email
-      }
-    }
-  }
-`;
-
-// GraphQL Mutation to delete an employee
-const DELETE_EMPLOYEE = gql`
-  mutation DeleteEmployee($deleteEmployeeId: ID!) {
-    deleteEmployee(id: $deleteEmployeeId) {
-      code
-      success
-      message
-      employee {
-        id
-        name
-        email
-      }
-    }
-  }
-`;
-
-// GraphQL Mutation to update an employee
-const UPDATE_EMPLOYEE = gql`
-  mutation UpdateEmployee(
-    $updateEmployeeId: ID!
-    $name: String
-    $email: String
-  ) {
-    updateEmployee(id: $updateEmployeeId, name: $name, email: $email) {
-      code
-      success
-      message
-      employee {
-        id
-        name
-        email
-      }
-    }
-  }
-`;
-
 const Home: React.FC = () => {
-  const { data, loading, error, refetch } = useQuery(QUERY, {
-    variables: {
-      page: 1,
-      pageSize: 10,
-    },
-  });
+  const { data, loading, error, refetch } = useQuery(
+    employeeQueries.QUERY_EMPLOYEES,
+    {
+      variables: {
+        page: 1,
+        pageSize: 10,
+      },
+    }
+  );
 
   const { addToast } = useToasts();
 
-  const [createEmployee] = useMutation(CREATE_EMPLOYEE);
-  const [deleteEmployee] = useMutation(DELETE_EMPLOYEE);
-  const [updateEmployee] = useMutation(UPDATE_EMPLOYEE);
+  const [createEmployee] = useMutation(employeeMutations.CREATE_EMPLOYEE);
+  const [deleteEmployee] = useMutation(employeeMutations.DELETE_EMPLOYEE);
+  const [updateEmployee] = useMutation(employeeMutations.UPDATE_EMPLOYEE);
 
   const [newEmployeeName, setNewEmployeeName] = useState('');
   const [newEmployeeEmail, setNewEmployeeEmail] = useState('');
@@ -92,7 +36,10 @@ const Home: React.FC = () => {
   const handleCreateEmployee = async () => {
     try {
       if (!validateEmail(newEmployeeEmail)) {
-        addToast('Please enter a valid email address.', { appearance: 'warning', autoDismiss: true });
+        addToast('Please enter a valid email address.', {
+          appearance: 'warning',
+          autoDismiss: true,
+        });
         return;
       }
 
@@ -106,10 +53,16 @@ const Home: React.FC = () => {
       refetch();
       setNewEmployeeName('');
       setNewEmployeeEmail('');
-      addToast('Employee created successfully.', { appearance: 'success', autoDismiss: true });
+      addToast('Employee created successfully.', {
+        appearance: 'success',
+        autoDismiss: true,
+      });
     } catch (error) {
       console.error('Error creating employee:', error);
-      addToast('Failed to create employee. Please try again later.', { appearance: 'error', autoDismiss: true });
+      addToast('Failed to create employee. Please try again later.', {
+        appearance: 'error',
+        autoDismiss: true,
+      });
     } finally {
       setIsCreating(false);
     }
@@ -124,10 +77,16 @@ const Home: React.FC = () => {
         },
       });
       refetch();
-      addToast('Employee deleted successfully.', { appearance: 'success', autoDismiss: true });
+      addToast('Employee deleted successfully.', {
+        appearance: 'success',
+        autoDismiss: true,
+      });
     } catch (error) {
       console.error('Error deleting employee:', error);
-      addToast('Failed to delete employee. Please try again later.', { appearance: 'error', autoDismiss: true });
+      addToast('Failed to delete employee. Please try again later.', {
+        appearance: 'error',
+        autoDismiss: true,
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -136,7 +95,10 @@ const Home: React.FC = () => {
   const handleUpdateEmployee = async () => {
     try {
       if (!validateEmail(editEmployeeEmail)) {
-        addToast('Please enter a valid email address.', { appearance: 'warning', autoDismiss: true });
+        addToast('Please enter a valid email address.', {
+          appearance: 'warning',
+          autoDismiss: true,
+        });
         return;
       }
 
@@ -153,13 +115,26 @@ const Home: React.FC = () => {
       setEditEmployeeId('');
       setEditEmployeeName('');
       setEditEmployeeEmail('');
-      addToast('Employee updated successfully.', { appearance: 'success', autoDismiss: true });
+      addToast('Employee updated successfully.', {
+        appearance: 'success',
+        autoDismiss: true,
+      });
     } catch (error) {
       console.error('Error updating employee:', error);
-      addToast('Failed to update employee. Please try again later.', { appearance: 'error', autoDismiss: true });
+      addToast('Failed to update employee. Please try again later.', {
+        appearance: 'error',
+        autoDismiss: true,
+      });
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const handleCancelUpdate = () => {
+    // Reset edit state to discard changes
+    setEditEmployeeId('');
+    setEditEmployeeName('');
+    setEditEmployeeEmail('');
   };
 
   const validateEmail = (email: string) => {
@@ -174,6 +149,11 @@ const Home: React.FC = () => {
     return <p>Error fetching data.</p>;
   }
 
+  // Sort employees by id on the frontend
+  const sortedEmployees = [...(data?.employees || [])].sort((a, b) =>
+    a.id.localeCompare(b.id)
+  );
+
   return (
     <>
       <Head>
@@ -184,13 +164,13 @@ const Home: React.FC = () => {
       </Head>
       <main className='p-4'>
         <h1 className='text-2xl font-bold mb-4'>Employees</h1>
-        <ul className='space-y-40 mx-auto w-1/3'>
-          {(data?.employees || []).map(
+        <ul className='space-y-4 mx-auto w-2/3'>
+          {sortedEmployees.map(
             (employee: { id: string; name: string; email: string }) => (
-              <li key={employee.id} className='border rounded-lg p-4 bg-gray-100'>
+              <li key={employee.id} className='border rounded-lg p-4 bg-gray-100 h-48'>
                 {/* Edit form or modal */}
                 {editEmployeeId === employee.id ? (
-                  <div className='mb-2'>
+                  <div className='mb-2 h-2/3'>
                     <input
                       type='text'
                       placeholder='Name'
@@ -207,27 +187,36 @@ const Home: React.FC = () => {
                       className='border rounded-md px-3 py-2 w-1/2'
                       disabled={isUpdating} // Disable editing while updating
                     />
-                    <button
-                      onClick={handleUpdateEmployee}
-                      className={`bg-green-500 text-white px-4 py-2 rounded-md ml-2 mt-6 ${
-                        isUpdating ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
-                      disabled={isUpdating}>
-                      {isUpdating ? 'Updating...' : 'Update'}
-                    </button>
+                    <div className='flex mt-4'>
+                      <button
+                        onClick={handleUpdateEmployee}
+                        className={`bg-green-500 text-white px-4 py-2 rounded-md mr-2 ${
+                          isUpdating ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                        disabled={isUpdating}>
+                        {isUpdating ? 'Updating...' : 'Save'}
+                      </button>
+                      <button
+                        onClick={handleCancelUpdate}
+                        className='bg-gray-500 text-white px-4 py-2 rounded-md'>
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <div className='text-left text-2xl mb-6'>
+                  <div className='text-left text-xl h-2/3'>
                     <strong>Id:</strong> {employee.id} <br />
                     <strong>Name:</strong> {employee.name} <br />
                     <strong>Email:</strong> {employee.email}
                   </div>
                 )}
                 {/* Actions */}
-                <div className='mt-2 flex justify-center'>
+                <div className='mt-2 flex justify-center h-1/4'>
                   <button
-                    className={`bg-blue-500 text-white px-4 py-2 rounded-md mr-2 ${
-                      editEmployeeId === employee.id || isUpdating ? 'opacity-50 cursor-not-allowed' : ''
+                    className={`bg-blue-500 text-white px-2 py-2 rounded-md mr-2 ${
+                      editEmployeeId === employee.id || isUpdating
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
                     }`}
                     onClick={() => {
                       setEditEmployeeId(employee.id);
@@ -235,15 +224,17 @@ const Home: React.FC = () => {
                       setEditEmployeeEmail(employee.email);
                     }}
                     disabled={editEmployeeId === employee.id || isUpdating}>
-                    Edit
+                    <FontAwesomeIcon icon={faEdit} className="h-6 w-6" />
                   </button>
                   <button
-                    className={`bg-red-500 text-white px-4 py-2 rounded-md ${
-                      editEmployeeId === employee.id || isUpdating ? 'opacity-50 cursor-not-allowed' : ''
+                    className={`bg-red-500 text-white px-2 py-2 rounded-md ${
+                      editEmployeeId === employee.id || isUpdating
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
                     }`}
                     onClick={() => handleDeleteEmployee(employee.id)}
                     disabled={editEmployeeId === employee.id || isUpdating}>
-                    Delete
+                    <FontAwesomeIcon icon={faTrashAlt} className="h-6 w-6" />
                   </button>
                 </div>
               </li>
@@ -252,7 +243,7 @@ const Home: React.FC = () => {
         </ul>
         <div className='mt-8'>
           <h2 className='text-xl font-bold mb-4'>Add New Employee</h2>
-          <div className='flex space-x-2 h-10'>
+          <div className='flex space-x-2 h-10 justify-center'>
             <input
               type='text'
               placeholder='Name'
