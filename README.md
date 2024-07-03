@@ -1,40 +1,95 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Employee Management System
 
-## Getting Started
+This project is an Employee Management System built using Next.js (version 13) with TypeScript, GraphQL via Apollo Client, and styled with Tailwind CSS. The application allows users to view, add, update, and delete employee records.
 
-First, run the development server:
+## Installation
+
+### Prerequisites
+
+Ensure you have the following installed:
+
+- Node.js (>= 14.x.x)
+- npm (>= 6.x.x) or yarn
+
+### Clone the repository
+
+```bash
+git clone https://github.com/your-username/employee-management-system.git
+cd employee-management-system
+```
+
+### Install dependencies
+
+```bash
+npm install
+```
+
+or if you prefer using yarn:
+
+```bash
+yarn install
+```
+
+### Running the Project Locally
+
+Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+or if you prefer using yarn:
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+```bash
+yarn dev
+```
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+The application should now be running at http://localhost:3000.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+### Building for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+To create an optimized production build:
 
-## Learn More
+```bash
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+or with yarn:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+yarn build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+After building, you can start the production server:
 
-## Deploy on Vercel
+```bash
+npm start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+or with yarn:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+```bash
+yarn start
+```
+
+## Project Structure
+
+- `pages/`: Contains the Next.js pages.
+- `components/`: Reusable React components.
+- `lib/`: Contains GraphQL queries and mutations.
+- `styles/`: Global styles and Tailwind CSS configuration.
+
+## Deployment
+
+This project is deployed using Vercel. To deploy your own version:
+
+1. Create a Vercel account: Vercel Signup
+2. Import your project: From the Vercel dashboard, click "New Project" and import your repository.
+3. Configure the project: Set up environment variables if needed.
+4. Deploy: Vercel will automatically build and deploy your project.
+
+The deployed application can be accessed at https://x-next-frontend.vercel.app/.
+
+## Notes
+
+Because the API Gateway did not apply SSL, you should allow `Insecure content` on your browser setting to access this page.
